@@ -65,6 +65,8 @@ public class BoidController : MonoBehaviour
 
 	private Vector2 targetPosition;
 	[field: SerializeField] public bool debug { get; private set; }
+	private int currentChunk = 0;
+	private int maxChunk = 3;
 
 	private void Awake()
 	{
