@@ -18,7 +18,10 @@ public class Boid : MonoBehaviour
 		this.boids = b.ToArray();
 		this.boidController = boidController;
 		velocity = new Vector3(Random.Range(boidController.initialMinVelocity, boidController.initialMaxVelocity),
-			Random.Range(boidController.initialMinVelocity, boidController.initialMaxVelocity));
+			Random.Range(boidController.initialMinVelocity, boidController.initialMaxVelocity),
+			this.boidController.is2d
+				? 0
+				: Random.Range(boidController.initialMinVelocity, boidController.initialMaxVelocity));
 	}
 
 	private void OnDrawGizmos()
@@ -37,6 +40,12 @@ public class Boid : MonoBehaviour
 		velocity += acceleration * Time.deltaTime;
 		velocity = Vector3.ClampMagnitude(velocity, boidController.maxVelocity);
 		position += velocity * Time.deltaTime;
+		if (boidController.is2d)
+		{
+			position = new Vector3(position.x, position.y, 0);
+			acceleration = new Vector3(acceleration.x, acceleration.y, 0);
+			velocity = new Vector3(velocity.x, velocity.y, 0);
+		}
 
 		transform.position = position;
 
@@ -59,11 +68,12 @@ public class Boid : MonoBehaviour
 		var sqrSeparationDistance = Mathf.Pow(boidController.separationDistance, 2);
 		for (var i = 0; i < boids.Length; i++)
 		{
-			var direction = new Vector3(position.x - boids[i].position.x, position.y - boids[i].position.y, 0);
+			var direction = new Vector3(position.x - boids[i].position.x, position.y - boids[i].position.y,
+				position.z - boids[i].position.z);
 			var sqrMag = Vector3.SqrMagnitude(direction);
 			alignment = ProcessAlignment(sqrMag, sqrAlignmentDistance, alignment, boids[i]);
 			centre = ProcessCohesion(sqrMag, sqrCohesionDistance, centre, boids[i], ref count);
-			separationDirection = ProcessSeperation(direction, sqrSeparationDistance, separationDirection);
+			separationDirection = ProcessSeparation(direction, sqrSeparationDistance, separationDirection);
 		}
 
 		var totalAlignment = alignment.normalized * boidController.alignmentStrength;
@@ -75,7 +85,8 @@ public class Boid : MonoBehaviour
 	private static Vector3 ProcessAlignment(float sqrMag, float sqrAlignmentDistance, Vector3 alignment, Boid boid)
 	{
 		if (sqrMag > sqrAlignmentDistance)
-			alignment = new Vector3(alignment.x + boid.velocity.x, alignment.y + boid.velocity.y, 0);
+			alignment = new Vector3(alignment.x + boid.velocity.x, alignment.y + boid.velocity.y,
+				alignment.z + boid.velocity.z);
 		return alignment;
 	}
 
@@ -83,19 +94,20 @@ public class Boid : MonoBehaviour
 		ref int count)
 	{
 		if (sqrMag < sqrCohesionDistance) return centre;
-		centre = new Vector3(centre.x + boid.position.x, centre.y + boid.position.y, 0);
+		centre = new Vector3(centre.x + boid.position.x, centre.y + boid.position.y, centre.z + boid.position.z);
 		count++;
 
 		return centre;
 	}
 
-	private static Vector3 ProcessSeperation(Vector3 direction, float sqrSeperationDistance,
+	private static Vector3 ProcessSeparation(Vector3 direction, float sqrSeparationDistance,
 		Vector3 separationDirection)
 	{
 		if (Vector3.SqrMagnitude(direction) <
-		    sqrSeperationDistance && direction.sqrMagnitude > 0)
+		    sqrSeparationDistance && direction.sqrMagnitude > 0)
 			separationDirection =
-				new Vector3(separationDirection.x + direction.x, separationDirection.y + direction.y, 0);
+				new Vector3(separationDirection.x + direction.x, separationDirection.y + direction.y,
+					separationDirection.z + direction.z);
 		return separationDirection;
 	}
 }

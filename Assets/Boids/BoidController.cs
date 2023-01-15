@@ -58,13 +58,14 @@ public class BoidController : MonoBehaviour
 	public float alignmentStrength { get; private set; }
 
 	[field: Header("Targeting")]
-
 	[field: Range(0, 100f)]
 	[field: SerializeField]
 	public float targetStrength { get; private set; }
 
 	private Vector2 targetPosition;
 	[field: SerializeField] public bool debug { get; private set; }
+	[field: SerializeField] public bool is2d { get; private set; }
+
 	private int currentChunk = 0;
 	private int maxChunk = 3;
 
@@ -72,9 +73,10 @@ public class BoidController : MonoBehaviour
 	{
 		for (var i = 0; i < spawnAmount; i++)
 		{
-			var go = GameObject.Instantiate(prefab, (Vector2) transform.position +
-			                                        new Vector2(Random.Range(-spawnRadius, spawnRadius),
-				                                        Random.Range(-spawnRadius, spawnRadius)),
+			var go = Instantiate(prefab, transform.position +
+			                             new Vector3(Random.Range(-spawnRadius, spawnRadius),
+				                             Random.Range(-spawnRadius, spawnRadius),
+				                             is2d ? 0 : Random.Range(-spawnRadius, spawnRadius)),
 				quaternion.identity);
 			boids.Add(go.GetComponent<Boid>());
 		}

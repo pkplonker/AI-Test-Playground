@@ -472,14 +472,15 @@ MonoBehaviour:
   <initialMaxVelocity>k__BackingField: 0.1
   <maxAccel>k__BackingField: 8
   <maxVelocity>k__BackingField: 5
-  <cohesionDistance>k__BackingField: 5
-  <cohesionStrength>k__BackingField: 5
-  <separationDistance>k__BackingField: 5
-  <separationStrength>k__BackingField: 20
-  <alignmentDistance>k__BackingField: 5
-  <alignmentStrength>k__BackingField: 5
-  <targetStrength>k__BackingField: 2
+  <cohesionDistance>k__BackingField: 30
+  <cohesionStrength>k__BackingField: 10
+  <separationDistance>k__BackingField: 1
+  <separationStrength>k__BackingField: 30
+  <alignmentDistance>k__BackingField: 10
+  <alignmentStrength>k__BackingField: 10
+  <targetStrength>k__BackingField: 1
   <debug>k__BackingField: 0
+  <is2d>k__BackingField: 0
 --- !u!4 &1603107723
 Transform:
   m_ObjectHideFlags: 0
