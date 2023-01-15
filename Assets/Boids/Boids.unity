@@ -475,9 +475,10 @@ MonoBehaviour:
   <cohesionDistance>k__BackingField: 5
   <cohesionStrength>k__BackingField: 5
   <separationDistance>k__BackingField: 5
-  <separationStrength>k__BackingField: 5
+  <separationStrength>k__BackingField: 20
   <alignmentDistance>k__BackingField: 5
   <alignmentStrength>k__BackingField: 5
+  <targetStrength>k__BackingField: 2
   <debug>k__BackingField: 0
 --- !u!4 &1603107723
 Transform:

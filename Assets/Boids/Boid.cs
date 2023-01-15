@@ -8,11 +8,14 @@ public class Boid : MonoBehaviour
 	private BoidController boidController;
 	private Vector2 velocity;
 	private Vector2 acceleration;
-	private Vector2 position;
+	private Vector3 position;
+	private Boid[] boids;
 
-
-	public void Init(BoidController boidController)
+	public void Init(BoidController boidController, List<Boid> boids)
 	{
+		var b = new List<Boid>(boids);
+		b.Remove(this);
+		this.boids = b.ToArray();
 		this.boidController = boidController;
 		velocity = new Vector2(Random.Range(boidController.initialMinVelocity, boidController.initialMaxVelocity),
 			Random.Range(boidController.initialMinVelocity, boidController.initialMaxVelocity));
@@ -24,75 +27,75 @@ public class Boid : MonoBehaviour
 		//Gizmos.DrawWireSphere(transform.position,boidController.separationDistance);
 	}
 
-	public void Move(List<Boid> boids)
+	public void Move()
 	{
-		acceleration += Cohesion(boids)* boidController.cohesionStrength;
-		acceleration += Separation(boids)*boidController.separationStrength;
-		acceleration += Alignment(boids)* boidController.alignmentStrength;
-		acceleration += Target();
+		acceleration += (Vector2) ProcessBaseRules();
+		acceleration += (Vector2) Target();
 		acceleration = Vector2.ClampMagnitude(acceleration, boidController.maxAccel);
-		if(boidController.debug)
+		if (boidController.debug)
 			Debug.DrawRay(transform.position, acceleration.normalized, Color.white);
 		velocity += acceleration * Time.deltaTime;
 		velocity = Vector2.ClampMagnitude(velocity, boidController.maxVelocity);
-		position += velocity  * Time.deltaTime;
+		position += (Vector3) velocity * Time.deltaTime;
+
 		transform.position = position;
-		
+
 		//rotation
-		if (acceleration != Vector2.zero)
-		{
-			var angle = Mathf.Atan2(acceleration.y, acceleration.x) * Mathf.Rad2Deg;
-			transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-		}
+		if (acceleration == Vector2.zero) return;
+		var angle = Mathf.Atan2(acceleration.y, acceleration.x) * Mathf.Rad2Deg;
+		transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
 	}
 
-	private Vector2 Target() => boidController.GetTarget() - transform.position;
-
-
-	private Vector2 Separation(List<Boid> boids)
+	private Vector3 Target() => (boidController.GetTarget() - transform.position) * boidController.targetStrength;
+	
+	private Vector3 ProcessBaseRules()
 	{
-		Vector2 separationDirection = Vector2.zero;
-		foreach (var boid in boids)
-		{
-			if (boid == this) continue;
-			if (Vector2.Distance(transform.position, boid.transform.position) > boidController.separationDistance) continue;
-			Vector2 direction = position - boid.position;
-			if (direction.magnitude > 0)
-				separationDirection += direction.normalized / direction.magnitude;
-			
-		}
-
-		return  separationDirection.normalized;
-	}
-
-	private Vector2 Cohesion(List<Boid> boids)
-	{
-		Vector2 centre = Vector2.zero; 
+		var alignment = Vector2.zero;
+		var sqrAlignmentDistance = Mathf.Pow(boidController.alignmentDistance, 2);
+		var centre = Vector3.zero;
 		var count = 0;
-		foreach (var boid in boids)
+		var sqrCohesionDistance = Mathf.Pow(boidController.cohesionDistance, 2);
+		var separationDirection = Vector3.zero;
+		var sqrSeperationDistance = Mathf.Pow(boidController.separationDistance, 2);
+		for (int i = 0; i < boids.Length; i++)
 		{
-			if (boid == this) continue;
-			var dist =Vector2.Distance(transform.position, boid.transform.position);
-			if (dist > boidController.cohesionDistance) continue;
-			centre += (Vector2) boid.transform.position;
+			var direction = position - boids[i].position;
+			var sqrMag = Vector3.SqrMagnitude(direction);
+			alignment = ProcessAlignment(sqrMag, sqrAlignmentDistance, alignment, boids[i]);
+			centre = ProcessCohesion(sqrMag, sqrCohesionDistance, centre, boids[i], ref count);
+			separationDirection = ProcessSeperation(direction, sqrSeperationDistance, separationDirection);
+		}
+
+		var totalAlignment = (alignment.normalized * boidController.alignmentStrength) ;
+		var totalCohesion = (Vector2) ((centre / (boids.Length - 1)).normalized)* boidController.cohesionStrength;
+		var toalSeparation = (Vector2) separationDirection.normalized* boidController.separationStrength;
+		return totalAlignment + totalCohesion + toalSeparation;
+	}
+
+	private static Vector2 ProcessAlignment(float sqrMag, float sqrAlignmentDistance, Vector2 alignment, Boid boid)
+	{
+		if (sqrMag > sqrAlignmentDistance)
+			alignment += boid.velocity;
+		return alignment;
+	}
+
+	private static Vector3 ProcessCohesion(float sqrMag, float sqrCohesionDistance, Vector3 centre, Boid boid,
+		ref int count)
+	{
+		if (sqrMag > sqrCohesionDistance)
+		{
+			centre += boid.position;
 			count++;
 		}
 
-		return (centre / (boids.Count - 1)).normalized;
+		return centre;
 	}
 
-	private Vector2 Alignment(List<Boid> boids)
+	private static Vector3 ProcessSeperation(Vector3 direction, float sqrSeperationDistance, Vector3 separationDirection)
 	{
-		Vector2 alignment = Vector2.zero; 
-		foreach (var boid in boids)
-		{
-			if (boid == this) continue;
-			var dist =Vector2.Distance(transform.position, boid.transform.position);
-			if (dist > boidController.alignmentDistance) continue;
-			alignment += boid.velocity;
-			
-		}
-
-		return alignment.normalized;
+		if (Vector2.SqrMagnitude(direction) <
+		    sqrSeperationDistance && direction.sqrMagnitude > 0)
+			separationDirection += direction;
+		return separationDirection;
 	}
 }
