@@ -10,7 +10,6 @@ public class AStar : MonoBehaviour
     private List<Node> closed;
     public Transform start;
     public Transform end;
-
     private void Awake()
     {
         aStarMap = GetComponent<AStarMap>();
@@ -18,11 +17,21 @@ public class AStar : MonoBehaviour
 
     private void Start()
     {
-        CalculatePath();
+        //CalculatePath();
+    }
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.Space))
+            CalculatePath();
     }
 
     private void CalculatePath()
     {
-        throw new NotImplementedException();
+        var node = aStarMap.GetNodeFromLocation(start.position);
+        if(node==null)return;
+        Debug.Log($"Node is {node.x}:{node.z}");
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.transform.position = aStarMap.GetCellLocationFromIndex(node.x, node.z);
     }
 }

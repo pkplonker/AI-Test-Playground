@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class AStarMap : MonoBehaviour
@@ -11,6 +12,7 @@ public class AStarMap : MonoBehaviour
 	public LayerMask hitMask;
 	private int mapWidth;
 	private int mapHeight;
+	public bool debug;
 
 	private void Awake()
 	{
@@ -37,9 +39,7 @@ public class AStarMap : MonoBehaviour
 				var boxSize = new Vector3((float) nodeSize / 2, 1, (float) nodeSize / 2);
 
 				var hit = !Physics.BoxCast(centre, boxSize, Vector3.down, Quaternion.identity, rayDistance, hitMask);
-
-				if (hit) Debug.Log($"hit, {x}:{z}");
-				else Debug.LogWarning($"Not hit, {x}:{z}");
+				
 				map[x, z] = new Node(x, z, hit);
 			}
 		}
@@ -65,18 +65,29 @@ public class AStarMap : MonoBehaviour
 			Debug.Log("Outside of bounds X");
 			return null;
 		}
+
 		if (location.y < bottomLeft.y || location.y > bottomLeft.y + (nodeSize * mapHeight))
 		{
 			Debug.Log("Outside of bounds Y");
 			return null;
 		}
-		
 
-		return null;//update
+		var xDistanceFromBL = bottomLeft.x < location.x ? bottomLeft.x - location.x : location.x - bottomLeft.x;
+		var yDistanceFromBL = bottomLeft.y < location.z ? bottomLeft.y - location.z : location.z - bottomLeft.y;
+		var x =Mathf.Abs(  Mathf.RoundToInt(xDistanceFromBL / nodeSize));
+		var y = Mathf.Abs(Mathf.RoundToInt(yDistanceFromBL / nodeSize));
+
+		if (x >= mapWidth || y >= mapHeight)
+		{
+			Debug.LogWarning("Trying to access out of bounds");
+			return null;
+		}
+		return map[x, y]; //update
 	}
 
 	private void OnDrawGizmos()
 	{
+		if (!debug) return;
 		Gizmos.color = Color.red;
 		Gizmos.DrawWireCube(transform.position, mapBounds);
 		if (map == null) return;
