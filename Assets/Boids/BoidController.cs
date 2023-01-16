@@ -85,6 +85,7 @@ public class BoidController : MonoBehaviour
 		{
 			t.Init(this, boids);
 		}
+		
 	}
 
 	private void Update()
