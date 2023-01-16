@@ -39,7 +39,7 @@ public class AStarMap : MonoBehaviour
 				var boxSize = new Vector3((float) nodeSize / 2, 1, (float) nodeSize / 2);
 
 				var hit = !Physics.BoxCast(centre, boxSize, Vector3.down, Quaternion.identity, rayDistance, hitMask);
-				
+
 				map[x, z] = new Node(x, z, hit);
 			}
 		}
@@ -74,7 +74,7 @@ public class AStarMap : MonoBehaviour
 
 		var xDistanceFromBL = bottomLeft.x < location.x ? bottomLeft.x - location.x : location.x - bottomLeft.x;
 		var yDistanceFromBL = bottomLeft.y < location.z ? bottomLeft.y - location.z : location.z - bottomLeft.y;
-		var x =Mathf.Abs(  Mathf.RoundToInt(xDistanceFromBL / nodeSize));
+		var x = Mathf.Abs(Mathf.RoundToInt(xDistanceFromBL / nodeSize));
 		var y = Mathf.Abs(Mathf.RoundToInt(yDistanceFromBL / nodeSize));
 
 		if (x >= mapWidth || y >= mapHeight)
@@ -82,6 +82,7 @@ public class AStarMap : MonoBehaviour
 			Debug.LogWarning("Trying to access out of bounds");
 			return null;
 		}
+
 		return map[x, y]; //update
 	}
 
@@ -101,6 +102,24 @@ public class AStarMap : MonoBehaviour
 			}
 		}
 	}
+
+	public IEnumerable<Node> CalculateNeighbours(Node target)
+	{
+		var neighbours = new List<Node>();
+		for (var z = -1; z < 2; z++)
+		{
+			for (var x = -1; x < 2; x++)
+			{
+				if (x == 0 && z == 0) continue;
+				var currentX = target.x + x;
+				var currentZ = target.z + z;
+				if (currentX >= mapWidth || currentX < 0 || currentZ >= mapWidth || currentZ < 0) continue;
+				neighbours.Add(map[currentX, currentZ]);
+			}
+		}
+
+		return neighbours;
+	}
 }
 
 public class Node
@@ -108,7 +127,11 @@ public class Node
 	public int x;
 	public int z;
 	public bool walkable;
+	public float f => g * h;
 
+	public float g; //distance from start
+	public float h; //estimated distance from end
+	public Node parent;
 	public Node(int x, int z, bool walkable)
 	{
 		this.x = x;
