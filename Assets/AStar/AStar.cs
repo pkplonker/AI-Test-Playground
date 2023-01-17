@@ -1,64 +1,57 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class AStar : MonoBehaviour
 {
 	public static AStarMap aStarMap { get; set; }
 	public static List<Node> open { get; private set; } = new();
-	public static List<Node> closed { get; private set; } = new();
+	public static Dictionary<Node,int> closed { get; private set; } = new();
 	private static Node startNode = null;
 	private static Node endNode = null;
 	private void Awake() => aStarMap = GetComponent<AStarMap>();
-
-
 	public static List<Vector3> points { get; private set; } = new();
-	
-
-
+	public bool debug;
 	private void OnDrawGizmos()
 	{
+		if (!debug) return;
 		if (open.Count != 0)
 		{
-			for (int i = 0; i < open.Count; i++)
+			foreach (var t in open)
 			{
 				Gizmos.color = Color.yellow;
-				Gizmos.DrawSphere(aStarMap.GetCellLocationFromNode(open[i]), aStarMap.nodeSize * 0.4f);
+				Gizmos.DrawSphere(aStarMap.GetCellLocationFromNode(t), aStarMap.nodeSize * 0.4f);
 			}
 		}
 
 		if (closed.Count != 0)
 		{
-			for (int i = 0; i < closed.Count; i++)
+			foreach (var t in closed)
 			{
 				Gizmos.color = Color.black;
-				Gizmos.DrawSphere(aStarMap.GetCellLocationFromNode(closed[i]), aStarMap.nodeSize * 0.4f);
+				Gizmos.DrawSphere(aStarMap.GetCellLocationFromNode(t.Key), aStarMap.nodeSize * 0.4f);
 			}
 		}
 
 		if (points.Count != 0)
 		{
-			for (int i = 0; i < points.Count; i++)
+			foreach (var t in points)
 			{
 				Gizmos.color = Color.blue;
-				Gizmos.DrawSphere(points[i], aStarMap.nodeSize * 0.4f);
+				Gizmos.DrawSphere(t, aStarMap.nodeSize * 0.4f);
 			}
 		}
 
 		if (startNode != null)
 		{
-			Gizmos.color = Color.magenta;
-			Gizmos.DrawSphere(aStarMap.GetCellLocationFromIndex(startNode.x, startNode.z), aStarMap.nodeSize * 0.8f);
+			Gizmos.color = Color.cyan;
+			Gizmos.DrawSphere(aStarMap.GetCellLocationFromIndex(startNode.x, startNode.z), aStarMap.nodeSize * 0.4f);
 		}
 
 		if (endNode != null)
 		{
-			Gizmos.color = Color.magenta;
-			Gizmos.DrawSphere(aStarMap.GetCellLocationFromIndex(endNode.x, endNode.z), aStarMap.nodeSize * 0.8f);
+			Gizmos.color = Color.white;
+			Gizmos.DrawSphere(aStarMap.GetCellLocationFromIndex(endNode.x, endNode.z), aStarMap.nodeSize * 0.4f);
 		}
 	}
 
@@ -82,12 +75,12 @@ public class AStar : MonoBehaviour
 			Debug.Log("Already at destination");
 			return null;
 		}
-		open = new List<Node>();
-		closed = new List<Node>();
+		open = new ();
+		closed = new ();
 		open.Add(startNode);
 		startNode.g = CalculateDistance(startNode, startNode); //dist from start
 		startNode.h = CalculateDistance(startNode, endNode);
-		while (open.Count > 0 && !closed.Contains(endNode))
+		while (open.Count > 0 && !closed.ContainsKey(endNode))
 		{
 			if (open.Count == 0)
 			{
@@ -98,13 +91,13 @@ public class AStar : MonoBehaviour
 			var currentNode = open[0];
 			if (open.Contains(currentNode))
 				open.Remove(currentNode);
-			closed.Add(currentNode);
+			closed.Add(currentNode,0);
 			if (currentNode == endNode)
 				return CalculateWaypoints(currentNode);
 			foreach (var neighbour in aStarMap.CalculateNeighbours(currentNode))
 			{
 				if (!neighbour.walkable) continue;
-				if (closed.Contains(neighbour)) continue;
+				if (closed.ContainsKey(neighbour)) continue;
 				var g = CalculateDistance(neighbour, currentNode) + currentNode.g; //dist from start
 				var h = CalculateDistance(neighbour, endNode);
 				//dist from end
@@ -153,6 +146,7 @@ public class AStar : MonoBehaviour
 		}
 
 		waypoints.Reverse();
+		points = waypoints;
 		return waypoints;
 	}
 }

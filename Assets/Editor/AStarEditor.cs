@@ -13,18 +13,17 @@ public class AStarEditor : Editor
 		var points = AStar.points;
 		var open = AStar.open;
 		var closed = AStar.closed;
+		
 
-
-		if (points != null && points.Count > 0)
+		if (points == null || points.Count <= 0) return;
+		if (!aStar.debug) return;
+		Handles.BeginGUI();
+		for (int i = 0; i < points.Count; i++)
 		{
-			Handles.BeginGUI();
-			for (int i = 0; i < points.Count; i++)
-			{
-				Handles.Label(points[i], i.ToString());
+			Handles.Label(points[i], i.ToString());
 
 
-				Handles.EndGUI();
-			}
+			Handles.EndGUI();
 		}
 	}
 }

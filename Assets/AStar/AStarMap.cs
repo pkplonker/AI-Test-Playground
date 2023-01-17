@@ -14,10 +14,8 @@ public class AStarMap : MonoBehaviour
 	private int mapHeight;
 	public bool debug;
 
-	private void Awake()
-	{
-		GenerateMapData();
-	}
+	private void Awake()=>GenerateMapData();
+	
 
 	private void GenerateMapData()
 	{
