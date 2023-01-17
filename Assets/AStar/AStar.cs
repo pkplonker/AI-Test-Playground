@@ -8,28 +8,16 @@ using UnityEngine.Serialization;
 
 public class AStar : MonoBehaviour
 {
-	public AStarMap aStarMap { get; set; }
-	public List<Node> open { get; private set; } = new();
-	public List<Node> closed { get; private set; } = new();
-	public Transform startTransform;
-	public Transform EndTransform;
-
+	public static AStarMap aStarMap { get; set; }
+	public static List<Node> open { get; private set; } = new();
+	public static List<Node> closed { get; private set; } = new();
+	private static Node startNode = null;
+	private static Node endNode = null;
 	private void Awake() => aStarMap = GetComponent<AStarMap>();
 
 
-	public List<Vector3> points { get; private set; } = new();
-
-	private void Update()
-	{
-		if (Input.GetKeyDown(KeyCode.Space))
-		{
-			points.Clear();
-			var p = CalculatePath(startTransform.position, EndTransform.position);
-			if (p != null && p.Count > 0)
-				points = new List<Vector3>(p);
-			else Debug.LogWarning("failed to get points");
-		}
-	}
+	public static List<Vector3> points { get; private set; } = new();
+	
 
 
 	private void OnDrawGizmos()
@@ -74,10 +62,7 @@ public class AStar : MonoBehaviour
 		}
 	}
 
-	private Node startNode = null;
-	private Node endNode = null;
-
-	private List<Vector3> CalculatePath(Vector3 start, Vector3 end)
+	public static List<Vector3> CalculatePath(Vector3 start, Vector3 end)
 	{
 		aStarMap.ClearNodes();
 		startNode = aStarMap.GetNodeFromLocation(start);
@@ -87,23 +72,19 @@ public class AStar : MonoBehaviour
 			Debug.LogError("Failed to get start node");
 			return null;
 		}
-
 		if (endNode == null)
 		{
 			Debug.LogError("Failed to get end node");
 			return null;
 		}
-
 		if (startNode == endNode)
 		{
 			Debug.Log("Already at destination");
 			return null;
 		}
-
 		open = new List<Node>();
 		closed = new List<Node>();
 		open.Add(startNode);
-
 		startNode.g = CalculateDistance(startNode, startNode); //dist from start
 		startNode.h = CalculateDistance(startNode, endNode);
 		while (open.Count > 0 && !closed.Contains(endNode))
@@ -113,7 +94,6 @@ public class AStar : MonoBehaviour
 				Debug.Log("No more open nodes");
 				break;
 			}
-
 			open = open.OrderBy(n => n.f).ToList();
 			var currentNode = open[0];
 			if (open.Contains(currentNode))
@@ -143,11 +123,10 @@ public class AStar : MonoBehaviour
 				}
 			}
 		}
-
 		return CalculateWaypoints(endNode);
 	}
 
-	private float CalculateDistance(Node start, Node end)
+	private static  float CalculateDistance(Node start, Node end)
 	{
 		var distanceX = Mathf.Abs(start.x - end.x);
 		var distanceY = Mathf.Abs(start.z - end.z);
@@ -157,7 +136,7 @@ public class AStar : MonoBehaviour
 		return 1.41421f * distanceX + 1 * (distanceY - distanceX);
 	}
 
-	private List<Vector3> CalculateWaypoints(Node node)
+	private static List<Vector3> CalculateWaypoints(Node node)
 	{
 		if (node.parent == null) return null;
 		List<Vector3> waypoints = new();

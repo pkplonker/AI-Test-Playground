@@ -10,9 +10,9 @@ public class AStarEditor : Editor
 	private void OnSceneGUI()
 	{
 		var aStar = (AStar) target;
-		var points = aStar.points;
-		var open = aStar.open;
-		var closed = aStar.closed;
+		var points = AStar.points;
+		var open = AStar.open;
+		var closed = AStar.closed;
 
 
 		if (points != null && points.Count > 0)
