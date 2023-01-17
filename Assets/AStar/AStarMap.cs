@@ -41,15 +41,16 @@ public class AStarMap : MonoBehaviour
 	public Vector3 GetCellLocationFromIndex(int x, int z)
 	{
 		var bottomLeft = GetBottomLeft();
-		var pos = new Vector3(bottomLeft.x + (x * nodeSize) + (float) nodeSize / 2, 0,
-			bottomLeft.y + (z * nodeSize) + (float) nodeSize / 2);
+		var pos = new Vector3(bottomLeft.x + (x * nodeSize) +  nodeSize / 2,
+			0,
+			bottomLeft.y + (z * nodeSize) + nodeSize / 2);
 		return pos;
 	}
 
 	public Vector3 GetCellLocationFromNode(Node node) => GetCellLocationFromIndex(node.x, node.z);
 
-	private Vector2 GetBottomLeft() => new(transform.position.x - ((float) mapWidth / 2),
-		transform.position.y - ((float) mapHeight / 2));
+	private Vector2 GetBottomLeft() => new(transform.position.x - ((float) mapWidth / 2 * nodeSize),
+		transform.position.y - ((float) mapHeight / 2* nodeSize));
 
 
 	public Node GetNodeFromLocation(Vector3 location)
