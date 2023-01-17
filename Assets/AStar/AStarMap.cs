@@ -7,7 +7,7 @@ using UnityEngine;
 public class AStarMap : MonoBehaviour
 {
 	public Node[,] map;
-	public int nodeSize;
+	public float nodeSize;
 	public Vector3 mapBounds;
 	public LayerMask hitMask;
 	private int mapWidth;
@@ -45,6 +45,8 @@ public class AStarMap : MonoBehaviour
 		}
 	}
 
+	
+
 	public Vector3 GetCellLocationFromIndex(int x, int z)
 	{
 		var bottomLeft = GetBottomLeft();
@@ -52,6 +54,7 @@ public class AStarMap : MonoBehaviour
 			bottomLeft.y + (z * nodeSize) + (float) nodeSize / 2);
 		return pos;
 	}
+	public Vector3 GetCellLocationFromNode(Node node)=>GetCellLocationFromIndex(node.x,node.z);
 
 	private Vector2 GetBottomLeft() => new(transform.position.x - ((float) mapWidth / 2),
 		transform.position.y - ((float) mapHeight / 2));
@@ -98,7 +101,7 @@ public class AStarMap : MonoBehaviour
 			{
 				Gizmos.color = map[x, z].walkable ? Color.green : Color.red;
 				var loc = GetCellLocationFromIndex(x, z);
-				Gizmos.DrawWireCube(GetCellLocationFromIndex(x, z), new Vector3(nodeSize, 0.5f, nodeSize));
+				Gizmos.DrawCube(GetCellLocationFromIndex(x, z)-new Vector3(0,0.35f,0), new Vector3(nodeSize-0.1f, 0.1f, nodeSize-0.1f));
 			}
 		}
 	}
@@ -120,6 +123,19 @@ public class AStarMap : MonoBehaviour
 
 		return neighbours;
 	}
+
+	public int GetNodeCount() => mapWidth * mapHeight;
+
+	public void ClearNodes()
+	{
+		for (var z = 0; z < mapHeight; z++)
+		{
+			for (var x = 0; x < mapWidth; x++)
+			{
+				map[x, z].Clear();
+			}
+		}
+	}
 }
 
 public class Node
@@ -127,15 +143,27 @@ public class Node
 	public int x;
 	public int z;
 	public bool walkable;
-	public float f => g * h;
+	public float f => g + h;
 
 	public float g; //distance from start
 	public float h; //estimated distance from end
-	public Node parent;
+	public Node parent = null;
 	public Node(int x, int z, bool walkable)
 	{
 		this.x = x;
 		this.z = z;
 		this.walkable = walkable;
+	}
+
+	public override string ToString()
+	{
+		return $"Node [{x}:{z}] - f{f}, g{g}, h{h}";
+	}
+
+	public void Clear()
+	{
+		g = 0;
+		h = 0;
+		parent = null;
 	}
 }

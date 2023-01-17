@@ -2,59 +2,89 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 
 public class AStar : MonoBehaviour
 {
-	private AStarMap aStarMap;
-	private List<Node> open;
-	private List<Node> closed;
+	public AStarMap aStarMap { get; set; }
+	public List<Node> open { get; private set; }
+	public List<Node> closed{ get; private set; }
 	public Transform startTransform;
 	public Transform EndTransform;
 
-	private void Awake()
-	{
-		aStarMap = GetComponent<AStarMap>();
-	}
+	private void Awake()=>aStarMap = GetComponent<AStarMap>();
+	
 
-	private void Start()
-	{
-		
-		
-	}
+	
+
+	public List<Vector3> points { get; private set; }= new();
 
 	private void Update()
 	{
 		if (Input.GetKeyDown(KeyCode.Space))
 		{
-			var x= CalculatePath(startTransform.position, EndTransform.position);
-			Debug.Log(x.Count);
+			points.Clear();
+			var p = CalculatePath(startTransform.position, EndTransform.position);
+			if(p!=null &&  p.Count>0)	
+				points = new List<Vector3>(p);
+			else Debug.LogWarning("failed to get points");
 		}
 	}
 
+	
+
+	private void OnDrawGizmos()
+	{
+		if (points.Count == 0) return;
+		for (int i = 0; i < points.Count; i++)
+		{
+			
+			Gizmos.color = Color.blue;
+			Gizmos.DrawSphere(points[i],0.4f);
+		}
+	
+
+		if (startNode != null)
+		{
+			Gizmos.color = Color.magenta;
+			Gizmos.DrawSphere(aStarMap.GetCellLocationFromIndex(startNode.x,startNode.z),.4f);
+		}
+
+		if (endNode != null)
+		{
+			Gizmos.color = Color.magenta;
+			Gizmos.DrawSphere(aStarMap.GetCellLocationFromIndex(endNode.x,endNode.z),.4f);
+
+		}
+	}
+
+	private Node startNode = null;
+	private Node endNode = null;
+
 	private List<Vector3> CalculatePath(Vector3 start, Vector3 end)
 	{
-		var startNode = aStarMap.GetNodeFromLocation(start);
-		var endNode = aStarMap.GetNodeFromLocation(end);
-		if (startNode == endNode)
-		{
-			Debug.Log("Already at destination");
-			return null;
-		}
+		aStarMap.ClearNodes();
+		startNode = aStarMap.GetNodeFromLocation(start);
+		endNode = aStarMap.GetNodeFromLocation(end);
+		
 
 		if (startNode == null)
 		{
 			Debug.LogError("Failed to get start node");
 			return null;
 		}
-
 		if (endNode == null)
 		{
 			Debug.LogError("Failed to get end node");
 			return null;
 		}
-
+		if (startNode == endNode)
+		{
+			Debug.Log("Already at destination");
+			return null;
+		}
 		open = new List<Node>();
 		closed = new List<Node>();
 		open.Add(startNode);
@@ -80,8 +110,8 @@ public class AStar : MonoBehaviour
 			{
 				if (!neighbour.walkable) continue;
 				if (closed.Contains(neighbour)) continue;
-				var g = CalculateDistance(neighbour, startNode);//dist from start
-				var h = CalculateDistance(neighbour, endNode);//dist from end
+				var g = CalculateDistance(neighbour, startNode) + currentNode.g; //dist from start
+				var h = CalculateDistance(neighbour, endNode); //dist from end
 				if (!open.Contains(neighbour))
 				{
 					neighbour.parent = currentNode;
@@ -95,21 +125,33 @@ public class AStar : MonoBehaviour
 					neighbour.g = g;
 					neighbour.h = h;
 				}
-				
 			}
 		}
-
+		
 		return CalculateWaypoints(endNode);
 	}
 
 	private float CalculateDistance(Node start, Node end) =>
 		MathF.Pow(GetDelta(start.x, end.x), 2) + MathF.Pow(GetDelta(start.z, end.z), 2);
-	
+
 	private static int GetDelta(int start, int end) => start > end ? start - end : end - start;
-	
+
 	private List<Vector3> CalculateWaypoints(Node node)
 	{
 		if (node.parent == null) return null;
-		return null;
+		List<Vector3> waypoints = new();
+		while (node.parent != null)
+		{
+			if (waypoints.Count > aStarMap.GetNodeCount())
+			{
+				Debug.LogError("in valid waypoint route");
+				return null;
+			}
+			waypoints.Add(aStarMap.GetCellLocationFromIndex(node.x, node.z));
+			node = node.parent;
+		}
+
+		waypoints.Reverse();
+		return waypoints;
 	}
 }
