@@ -24,28 +24,19 @@ public class AStarMap : MonoBehaviour
 		mapWidth = Mathf.RoundToInt(mapBounds.x / nodeSize);
 		mapHeight = Mathf.RoundToInt(mapBounds.z / nodeSize);
 		map = new Node[mapWidth, mapHeight];
-		var bottomLeft = new Vector2(transform.position.x - ((float) mapWidth / 2),
-			transform.position.y - ((float) mapHeight / 2));
 		for (var z = 0; z < mapHeight; z++)
 		{
 			for (var x = 0; x < mapWidth; x++)
 			{
 				var rayDistance = 10f;
-
-				Debug.DrawRay(GetCellLocationFromIndex(x, z) + new Vector3(0, rayDistance, 0),
-					Vector3.down * rayDistance * 2, Color.blue);
-				RaycastHit hitData;
-				var centre = GetCellLocationFromIndex(x, z) + new Vector3(0, rayDistance, 0);
-				var boxSize = new Vector3((float) nodeSize / 2, 1, (float) nodeSize / 2);
-
-				var hit = !Physics.BoxCast(centre, boxSize, Vector3.down, Quaternion.identity, rayDistance, hitMask);
-
-				map[x, z] = new Node(x, z, hit);
+				map[x, z] = new Node(x, z,
+					!Physics.BoxCast(GetCellLocationFromIndex(x, z) + new Vector3(0, rayDistance, 0),
+						new Vector3(nodeSize / 2, 1.0f, nodeSize / 2), Vector3.down, Quaternion.identity, rayDistance,
+						hitMask));
 			}
 		}
 	}
 
-	
 
 	public Vector3 GetCellLocationFromIndex(int x, int z)
 	{
@@ -54,7 +45,8 @@ public class AStarMap : MonoBehaviour
 			bottomLeft.y + (z * nodeSize) + (float) nodeSize / 2);
 		return pos;
 	}
-	public Vector3 GetCellLocationFromNode(Node node)=>GetCellLocationFromIndex(node.x,node.z);
+
+	public Vector3 GetCellLocationFromNode(Node node) => GetCellLocationFromIndex(node.x, node.z);
 
 	private Vector2 GetBottomLeft() => new(transform.position.x - ((float) mapWidth / 2),
 		transform.position.y - ((float) mapHeight / 2));
@@ -101,7 +93,8 @@ public class AStarMap : MonoBehaviour
 			{
 				Gizmos.color = map[x, z].walkable ? Color.green : Color.red;
 				var loc = GetCellLocationFromIndex(x, z);
-				Gizmos.DrawCube(GetCellLocationFromIndex(x, z)-new Vector3(0,0.35f,0), new Vector3(nodeSize-0.1f, 0.1f, nodeSize-0.1f));
+				Gizmos.DrawCube(GetCellLocationFromIndex(x, z) - new Vector3(0, 0.35f, 0),
+					new Vector3(nodeSize - 0.1f, 0.1f, nodeSize - 0.1f));
 			}
 		}
 	}
@@ -148,6 +141,7 @@ public class Node
 	public float g; //distance from start
 	public float h; //estimated distance from end
 	public Node parent = null;
+
 	public Node(int x, int z, bool walkable)
 	{
 		this.x = x;
